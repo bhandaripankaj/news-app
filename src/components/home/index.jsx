@@ -1,6 +1,7 @@
 import './index.css';
 
 function Home() {
+  const worldNews = ["market.jpeg","worldcup.jpeg","football.jpeg","world-map.avif"]
   return (
     <div>
     <div className="Home">
@@ -84,7 +85,27 @@ function Home() {
         </div>
        </div>
     </div>
+    <div className='world-wide'>
+      <hr></hr>
+      <h4>World Wide News</h4>
     </div>
+    <div className='world-news'>
+        <div className='left'>
+         <img src='world-map.avif'></img>
+         <h5>World Map Globe with Steel Stand Silver Plastic Ball ...</h5>
+         <p>The Earth and Constellation Globe features a 12-inch stand height with 8-inches plastic ball globe on a sturdy iron stand. Geopolitical boundaries named places </p>
+        </div>
+        <div className='right'>
+           {worldNews.map((el,index)=>(
+             <div key={index} className="item">
+            <img src={el}></img>
+            <h5>World Map Globe with Steel Stand Silver Plastic Ball ...</h5>
+         <p>The Earth and Constellation Globe features a 12-inch stand height with 8-inches ... </p>
+           </div>
+           ))}
+        </div>
+    </div>
+      </div>
   );
 }
 

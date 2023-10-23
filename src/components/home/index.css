@@ -52,14 +52,14 @@
 .right-inner .inner-div h4 {
     margin-bottom: 5px;
   }
-  .left  h4 {
+  .left  h4 ,h5{
     margin-bottom: 5px;
   }
   
   .right-inner .inner-div p {
     margin-top: 5px; 
   }
-  .left p {
+  .left p ,h5, .right p{
     margin-top: 5px; 
   }
 
@@ -160,3 +160,49 @@ hr.custom-hr {
     width: 300px;
     border-radius: 10px;
 }
+.world-wide {
+    position: relative;
+
+}
+.world-wide hr {
+    margin-left: 350px;
+    margin-right: 100px;
+    }
+.world-wide h4{
+    color:  #6a6161;
+    position: absolute;
+    margin-left: 220px;
+    margin-top: -30px;
+}
+.world-news {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    text-align: left;
+    gap: 100px;
+    padding: 15px;
+}
+.world-news .left {
+    margin-left: 300px;
+}
+.world-news .left img {
+    width: 700px;
+    height: auto;
+    border-radius: 10px;
+
+}
+.world-news .right {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .world-news .right .item {
+    width: 34%;
+    box-sizing: border-box;
+  }
+
+  .world-news .right .item img{
+    width: 200px;
+    height: 150px;
+    border-radius: 10px;
+  }
