@@ -1,28 +1,146 @@
+import { useEffect } from 'react';
 import './index.css';
+import axios from 'axios';
+import { useState } from 'react';
 
 function Home() {
-  const worldNews = ["market.jpeg","worldcup.jpeg","football.jpeg","world-map.avif"]
+  const [sports,setSports] = useState([])
+  const [topNews,setTopNews] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [latestNews,setLatestNews] = useState([])
+  const [hometNews,setHomeNews] = useState([])
+  const [worldWideNews,setworldWideNews] = useState([])
+
+
+  const fetchData = async (api) => {
+    try {
+       if(api==="premiumIndex"){
+        let options = {
+          method: 'GET',
+          url: 'https://cricbuzz-cricket.p.rapidapi.com/news/v1/'+api,
+          headers: {
+            'X-RapidAPI-Key': 'fb7fa70753mshef6e9dc2f82c558p1a2f32jsnaadc62bdf187',
+            'X-RapidAPI-Host': 'cricbuzz-cricket.p.rapidapi.com'
+          }
+        };
+         const response = await axios.request(options);
+         if(response.data.storyList){
+            let sportNews = [] 
+            for (let el of response.data.storyList) {
+                  if(el.story){
+                    const options = {
+                      method: 'GET',
+                      url: `https://cricbuzz-cricket.p.rapidapi.com/img/v1/i1/c${el.story.imageId}/i.jpg`,
+                      params: {p: 'de', d: 'high'},
+                      headers: {
+                        'X-RapidAPI-Key': 'fb7fa70753mshef6e9dc2f82c558p1a2f32jsnaadc62bdf187',
+                        'X-RapidAPI-Host': 'cricbuzz-cricket.p.rapidapi.com'
+                      },
+                      responseType: 'arraybuffer'
+                    };
+                    const imageAPi = await axios.request(options);
+                    const base64Image = btoa(
+                      new Uint8Array(imageAPi.data).reduce(
+                        (data, byte) => data + String.fromCharCode(byte),
+                        ''
+                      )
+                    );
+                     el.story.imageId = `data:image/jpeg;base64,${base64Image}`;
+                   sportNews.push(el)
+                  }
+                  if(sportNews.length === 2){
+                   break
+                  }
+            }
+           setSports(sportNews)
+         }
+       } else if(api==="list-by-region"){
+        const options = {
+          method: 'GET',
+          url: 'https://bloomberg-market-and-financial-news.p.rapidapi.com/news/list-by-region',
+          params: {id: 'asia-home-v3'},
+          headers: {
+            'X-RapidAPI-Key': 'fb7fa70753mshef6e9dc2f82c558p1a2f32jsnaadc62bdf187',
+            'X-RapidAPI-Host': 'bloomberg-market-and-financial-news.p.rapidapi.com'
+          }
+        };
+        const response = await axios.request(options);
+        if(response.data?.modules?.length){
+        for (const el of response.data.modules) {
+          if(el.id === "top_news_via_asia"){
+            setTopNews(el.stories.slice(0,5))
+            break
+          }
+        }
+        }
+       } else if(api === "latest" || api ==="industries" || api === "quickTake"){
+        const options = {
+          method: 'GET',
+          url: 'https://bloomberg-market-and-financial-news.p.rapidapi.com/news/list',
+          params: {id: api},
+          headers: {
+            'X-RapidAPI-Key': 'fb7fa70753mshef6e9dc2f82c558p1a2f32jsnaadc62bdf187',
+            'X-RapidAPI-Host': 'bloomberg-market-and-financial-news.p.rapidapi.com'
+          }
+        };
+        const response = await axios.request(options);
+        if(response.data?.modules?.length){
+          let industries = []
+        for (const el of response.data.modules) {
+          if(api === "latest" && el.id==="latest"){
+            setLatestNews(el.stories.slice(0,3))
+            break
+          } else if(api==="industries"){
+            industries.push(...el.stories)
+            if(industries.length >=5){
+              setHomeNews(industries.splice(0,5))
+              break
+            }
+          } else if(api === "quickTake") {
+            setworldWideNews(el.stories.splice(0,5))
+           break
+          }
+        }
+        }
+       }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData("industries");
+    fetchData("premiumIndex");
+    fetchData("list-by-region");
+    fetchData("latest");
+    fetchData("quickTake");
+    setTimeout(()=>{setLoading(false)},2000)
+  }, []);
   return (
     <div>
+         {loading && (
+           <div className="loading-container">
+          <div className="loading-spinner"></div>
+        </div>
+      )}
+          <div className={`${loading ? 'blur' : ''}`}>
     <div className="Home">
         <div className='left'>
-            <img src='home-img.jpg'></img>
+            <img src={hometNews[0]?.image}></img>
             <div>
-            <h4>Why brands choose Dribbble to hire design talent</h4>
-            <p>
-            Online media is important for society in informing and shaping opinions, hence raising the question of what drives online news consumption. Here we analyse the causal effect of negative and emotional words on news consumption using a large online dataset of viral news stories. Specifically, we conducted our analyses using a series of randomized controlled trials (N = 22,.. </p>
+            <h4>{hometNews[0]?.title}</h4>
+            <p>{(hometNews[0]?.summary)?hometNews[0].summary:hometNews[0]?.autoGeneratedSummary}
+           </p>
             </div>
-       
         </div>
         <div className='right'>
-          {Array.from({length:4}).map((el,index)=>(
-              <div>
-            <div key={index+1} className='right-inner'>
-            <img src='home-img.jpg'></img>
+          {hometNews.slice(1).map((el,index)=>(
+              <div key={index}>
+            <div  className='right-inner'>
+            <img src={el.image}></img>
                <div className='inner-div'>
-                <h4>Discover trending designs.Browse and save your favorite design projects for endless inspiration.</h4>
-                <p>
-                The newsroom phrase ‘if it bleeds, it leads’ was coined to reflect the intuition among journalists that stories about crime, bloodshed and tragedy sell more newspapers than stories about good news1. However, a large portion of news readership now 
+                <h4>{el.title}</h4>
+                <p>{el.summary?el.summary:el.autoGeneratedSummary}
                 </p>
                </div>
             </div>
@@ -32,17 +150,18 @@ function Home() {
         </div>
     </div>
     <hr className='custom-hr'/>
+    {topNews.length > 1&&(
     <div className='main-news'>
        <div className='news-headline'>
         <h2>Top Stories</h2>
         <div >
-          {Array.from({length:5}).map((el,index)=>(
-            <div className='stories'>
+          {topNews.map((el,index)=>(
+            <div key={index} className='stories'>
           <div>
-          <img src='fire.jpeg' ></img>
+          <img src={el.image} ></img>
           <div className='content'> 
-            <h4>End Of The World</h4>
-            <p>The end of the world as we know it is not the end of the world ... it is also the end of a way of knowing the world. "When a world ends, its systems and stories come apart, even the largest of th...</p>
+            <h4>{el.title}</h4>
+            <p>{el.autoGeneratedSummary}</p>
           </div>
           </div>
           {index !== 4 &&<hr/>}
@@ -53,13 +172,13 @@ function Home() {
        <div className='news-headline'>
         <h2>Sports</h2>
         <div > 
-        {Array.from({length:2}).map((el,index)=>(
-          <div className='sports'>
+        {sports.map((el,index)=>(
+          <div key={index} className='sports'>
         <div>
-          <img src='sports.jpeg' ></img>
+          <img src={el.story.imageId} style={{maxWidth:"570px"}}></img>
           <div >
-            <h4>End Of The World</h4>
-            <p>The end of the world as we know it is not the end of the world ... it is also the end of a way of knowing the world. "When a world ends, its systems and stories come apart, even the largest of th...</p>
+            <h4>{el.story.hline}</h4>
+            <p>{el.story.intro}</p>
           </div>
         </div>
          {index !==1 && <hr/>}
@@ -70,13 +189,13 @@ function Home() {
        <div className='news-headline'>
         <h2>Lates News</h2>
         <div>
-          {Array.from({length:3}).map((el,index)=>(
-            <div className='lates'>
+          {latestNews.map((el,index)=>(
+            <div key={index} className='lates'>
             <div > 
-              <img src='war.jpeg' ></img>
+              <img src={el.image} ></img>
               <div>
-                <h4>End Of The World</h4>
-                <p>The end of the world as we know it is not the end of the world ... it is also the end of a way of knowing the world. "When a wor th...</p>
+                <h4>{el.title}</h4>
+                <p>{el.summary?el.summary:el.autoGeneratedSummary}</p>
               </div>
             </div>
            {index !==2 && <hr/>}
@@ -85,27 +204,30 @@ function Home() {
         </div>
        </div>
     </div>
+    )}
     <div className='world-wide'>
       <hr></hr>
       <h4>World Wide News</h4>
     </div>
     <div className='world-news'>
         <div className='left'>
-         <img src='world-map.avif'></img>
-         <h5>World Map Globe with Steel Stand Silver Plastic Ball ...</h5>
-         <p>The Earth and Constellation Globe features a 12-inch stand height with 8-inches plastic ball globe on a sturdy iron stand. Geopolitical boundaries named places </p>
+         <img src={worldWideNews[0]?.image}></img>
+         <h5>{worldWideNews[0]?.title}</h5>
+         <p> {(worldWideNews[0]?.summary)?worldWideNews[0].summary:worldWideNews[0]?.autoGeneratedSummary}</p>
         </div>
         <div className='right'>
-           {worldNews.map((el,index)=>(
+           {worldWideNews.slice(1).map((el,index)=>(
              <div key={index} className="item">
-            <img src={el}></img>
-            <h5>World Map Globe with Steel Stand Silver Plastic Ball ...</h5>
-         <p>The Earth and Constellation Globe features a 12-inch stand height with 8-inches ... </p>
+            <img src={el.image}></img>
+            <h5>{el.title}</h5>
+         <p>{(el?.summary)?el.summary:el?.autoGeneratedSummary.substring(0,100)+"..."} </p>
            </div>
            ))}
         </div>
     </div>
       </div>
+    </div>
+
   );
 }
 
